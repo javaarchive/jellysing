@@ -1,0 +1,23 @@
+---
+import CenteredContent from '../components/CenteredContent.astro';
+import JellyfinPicklibrary from '../components/JellyfinPickLibrary';
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Select Jellyfin library.">
+	<main>
+		<CenteredContent>
+			<h1>Select Jellyfin library</h1>
+			<p>
+				These credentials are stored in local storage so they never touch the server.
+			</p>
+			<div class="m-auto p-4 max-w-md xl:max-w-lg">
+				<JellyfinPicklibrary client:visible />
+			</div>
+		</CenteredContent>
+	</main>
+</Layout>
+
+<style>
+	
+</style>

@@ -1,0 +1,54 @@
+/* some rand shadn ui css generator */
+:root {
+    --background: 267 100% 95%;
+    --foreground: 267 5% 0%;
+    --card: 267 50% 90%;
+    --card-foreground: 267 5% 10%;
+    --popover: 267 100% 95%;
+    --popover-foreground: 267 100% 0%;
+    --primary: 267 56% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 267 30% 70%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 229 30% 85%;
+    --muted-foreground: 267 5% 35%;
+    --accent: 229 30% 80%;
+    --accent-foreground: 267 5% 10%;
+    --destructive: 0 100% 30%;
+    --destructive-foreground: 267 5% 90%;
+    --border: 267 30% 50%;
+    --input: 267 30% 18%;
+    --ring: 267 56% 53%;
+    --radius: 0.5rem;
+}
+
+.dark {
+    --background: 267 50% 5%;
+    --foreground: 267 5% 90%;
+    --card: 267 50% 0%;
+    --card-foreground: 267 5% 90%;
+    --popover: 267 50% 5%;
+    --popover-foreground: 267 5% 90%;
+    --primary: 267 56% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 267 30% 10%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 229 30% 15%;
+    --muted-foreground: 267 5% 60%;
+    --accent: 229 30% 15%;
+    --accent-foreground: 267 5% 90%;
+    --destructive: 0 100% 30%;
+    --destructive-foreground: 267 5% 90%;
+    --border: 267 30% 18%;
+    --input: 267 30% 18%;
+    --ring: 267 56% 53%;
+    --radius: 0.5rem;
+}
+
+body {
+    font-family: 'Inter Variable', sans-serif;
+}
+
+.img-optimize {
+    content-visibility: auto;
+}
