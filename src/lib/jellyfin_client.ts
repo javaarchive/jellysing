@@ -174,12 +174,17 @@ class BrowserJellyfinClient extends JellyfinClient {
 
 let defaultClient = new BrowserJellyfinClient();
 
-export function getDefaultClient() {
+export function getDefaultJellyfinClient() {
     if(!defaultClient.defaultInit){
         defaultClient.autologin();
         defaultClient.defaultInit = true;
     }
     return defaultClient;
+}
+
+// convert jellyfin ticks to milliseconds
+export function ticksToMs(ticks: number) {
+    return ticks / 10000;
 }
 
 export { BrowserJellyfinClient, tryGetLocalStorage };

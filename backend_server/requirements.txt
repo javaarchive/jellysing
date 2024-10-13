@@ -1,0 +1,4 @@
+fastapi
+python-multipart
+uvicorn
+audio-separator[gpu]

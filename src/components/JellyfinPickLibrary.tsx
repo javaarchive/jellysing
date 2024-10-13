@@ -1,12 +1,12 @@
 import {useState, useEffect} from "react";
-import { getDefaultClient, tryGetLocalStorage } from "../lib/jellyfin_client";
+import { getDefaultJellyfinClient, tryGetLocalStorage } from "../lib/jellyfin_client";
 
 export default function JellyfinPicklibrary() {
 
     const [libraries, setLibraries] = useState(null);
     
     async function refreshLibraries() {
-        const client = getDefaultClient();
+        const client = getDefaultJellyfinClient();
         const basicInfo = client.tryGetBasicInfo();
         try{
             const serverLibrariesResponse = await client.getLibraries();

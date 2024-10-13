@@ -1,5 +1,5 @@
 import {useState} from "react";
-import { getDefaultClient, tryGetSavedLibraryId } from "../lib/jellyfin_client";
+import { getDefaultJellyfinClient, tryGetSavedLibraryId } from "../lib/jellyfin_client";
 
 // TODO: handle bad jellyfin credentiaals?
 
@@ -15,7 +15,7 @@ export default function SearchView() {
             query = query2;
         }
 
-        const client = getDefaultClient();
+        const client = getDefaultJellyfinClient();
         if(!tryGetSavedLibraryId()){
             setError("No Jellyfin library selected yet.");
             return;
@@ -49,7 +49,7 @@ export default function SearchView() {
             {results.length > 0 && <p className="mt-8">Found <strong>{results.length}</strong> results, in {Math.floor(lastQueryTime)} ms.</p>} 
             <div className="grid grid-cols-4 gap-4 mt-2">
                 {results.length > 0 && results.map((item) => {
-                    const client = getDefaultClient();
+                    const client = getDefaultJellyfinClient();
                     const itemText = item["Name"] + " - " + item["Artists"].join(", ");
                     return (
                         <div key={item["Id"]}>

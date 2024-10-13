@@ -1,5 +1,5 @@
 import {useState} from "react";
-import { getDefaultClient } from "../lib/jellyfin_client";
+import { getDefaultJellyfinClient } from "../lib/jellyfin_client";
 
 export default function JellyfinLogin(props: any) {
 
@@ -10,7 +10,7 @@ export default function JellyfinLogin(props: any) {
     const [loggingIn, setLoggingIn] = useState(false);
     
     async function validateCredentials() {
-        const client = getDefaultClient();
+        const client = getDefaultJellyfinClient();
         console.log("Validating credentials");
         if(server && username && password) {
             // attempt to fetch
