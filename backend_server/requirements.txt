@@ -2,3 +2,5 @@ fastapi
 python-multipart
 uvicorn
 audio-separator[gpu]
+# this is because they have a good forced alignment section
+git+https://github.com/m-bain/whisperx.git

@@ -22,8 +22,18 @@ from fastapi import UploadFile
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# add wildcard cors
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 try:
     os.mkdir("data")
@@ -67,7 +77,7 @@ async def processing_generator(tempfile_path: str):
     yield format_message("load_complete", json.dumps({
         "time": time.time(),
         "read": read_amount,
-        "sha256": hash
+        "hash": hash
     }))
     yield format_message("infer_queued", json.dumps({
         "time": time.time(),
