@@ -1,7 +1,7 @@
 import {useState} from "react";
 import { getDefaultJellyfinClient } from "../lib/jellyfin_client";
 
-export default function JellyfinLogin(props: any) {
+export default function JellysingBackendPicker(props: any) { 
 
     const [server, setServer] = useState("");
     const [key, setKey] = useState("");
