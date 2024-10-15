@@ -37,7 +37,7 @@ export class JellyfinClient {
         return value;
     }
 
-    async request(path: string, method: string = "GET", body: any = null) {
+    async request(path: string, method: string = "GET", body: any = null, raw: boolean = false) {
         let url = new URL(this.baseUrl + path);
         if(method == "GET"){
             let usp = new URLSearchParams();
@@ -61,6 +61,7 @@ export class JellyfinClient {
             },
             body: method != "GET" ? JSON.stringify(body) : null
         });
+        if(raw) return resp;
         if(!resp.ok){
             throw new Error("Jellyfin Error: " + resp.statusText + " " + (await resp.text()));
         }
@@ -98,6 +99,16 @@ export class JellyfinClient {
         return (await this.request("/Items", "GET", {
             userId: this.userId
         }));
+    }
+
+    async createItemDownloadRequest(itemId: string): Promise<Response> {
+        let response = await this.request("/Items/" + itemId + "/Download", "GET", {}, true);
+        return response;
+    }
+
+    async createAudioStreamRequest(itemId: string, opts: any = {}): Promise<Response> {
+        let response = await this.request("/Audio/" + itemId + "/stream", "GET", opts, true);
+        return response;
     }
 }
 
@@ -174,7 +185,7 @@ class BrowserJellyfinClient extends JellyfinClient {
 
 let defaultClient = new BrowserJellyfinClient();
 
-export function getDefaultJellyfinClient() {
+export function getDefaultJellyfinClient(): BrowserJellyfinClient {
     if(!defaultClient.defaultInit){
         defaultClient.autologin();
         defaultClient.defaultInit = true;

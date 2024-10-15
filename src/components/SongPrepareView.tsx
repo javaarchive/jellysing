@@ -1,6 +1,7 @@
-import {useState, useEffect} from "react";
+import {useState, useEffect, useRef} from "react";
 import { getDefaultJellyfinClient, ticksToMs, tryGetSavedLibraryId } from "../lib/jellyfin_client";
 import { getDefaultLyricsClient } from "../lib/lrclib_client";
+import { download } from "../lib/util";
 
 // TODO: handle bad jellyfin credentiaals?
 
@@ -15,6 +16,9 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
     const [lrcSearchArtistName, setLrcSearchArtistName] = useState("");
     const [lrcSearchAlbumName, setLrcSearchAlbumName] = useState("");
     const [lyrics, setLyrics] = useState([]);
+    const [loadingAudio, setLoadingAudio] = useState(true);
+    const [loadingPercent, setLoadingPercent] = useState(0);
+    const audioRef = useRef<HTMLAudioElement>(null);
 
     async function fetchItem(setDefaults = true) {
         const client = getDefaultJellyfinClient();
@@ -43,8 +47,31 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
         return item["MediaStreams"].find(stream => stream["Type"] == "Lyric");
     }
 
+    async function fetchAudio(){
+        const client = getDefaultJellyfinClient();
+        let resp = await client.createAudioStreamRequest(props.itemId);
+        if(resp.ok){
+            download(resp, {
+                onFinish(blob) {
+                    if(audioRef.current){
+                        audioRef.current.src = URL.createObjectURL(blob);
+                        setLoadingAudio(false);
+                    }else{
+                        console.warn("Audio el ref not found");
+                    }
+                },
+                onProgress(progress, total) {
+                    console.log(progress, total, " load progress");
+                    setLoadingPercent(Math.ceil((progress / total) * 100));
+                },
+            })
+        }
+    }
+
     useEffect(() => {
         fetchItem();
+        // also fetch the audio itself lol
+        fetchAudio();
     }, []);
 
     if(item) console.log(findLyrics(item));
@@ -83,6 +110,8 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
                         <p className="text-md justify-center items-center">{item["Artists"].join(", ")}</p>
                     </div>
                 </div>
+                {loadingAudio && <p>Loading audio...{loadingPercent}%</p>}
+                <audio controls ref={audioRef} className="min-w-full" />
                 <p>
                     Duration: {(ticksToMs(item["RunTimeTicks"]) / 1000).toFixed(1)} seconds
                 </p>
@@ -120,7 +149,9 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
                 <h2 className="text-xl font-bold">
                     Stem Seperation
                 </h2>
-                
+                <p>
+                    This may take a bit (up to a minute) to process depending on song length but is def doable realtime. This will be gpu intense.
+                </p>
             </>
         }
         {

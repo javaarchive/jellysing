@@ -28,7 +28,7 @@ export default class LrclibClient {
         return usp;
     }
 
-    async get(query: LrclibQuery){
+    async get(query: LrclibQuery) {
         let url = new URL(lrclibBaseUrl + "/get");
         url.search = this.serializeQuery(query).toString();
         let resp = await fetch(url, {
@@ -67,6 +67,6 @@ export default class LrclibClient {
 
 const defaultClient = new LrclibClient();
 
-export function getDefaultLyricsClient() {
+export function getDefaultLyricsClient(): LrclibClient {
     return defaultClient;
 }
