@@ -176,8 +176,8 @@ async def separate_route(file: UploadFile):
     return StreamingResponse(processing_generator(path), media_type="text/event-stream")
 
 reference_suffixes = {
-    "vocals": ".1",
-    "instrumental": ".0",
+    "vocals": ".0",
+    "instrumental": ".1",
     "combined": ""
 }
 
