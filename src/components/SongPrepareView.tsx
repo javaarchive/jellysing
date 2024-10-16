@@ -2,6 +2,8 @@ import {useState, useEffect, useRef} from "react";
 import { getDefaultJellyfinClient, ticksToMs, tryGetSavedLibraryId } from "../lib/jellyfin_client";
 import { getDefaultLyricsClient } from "../lib/lrclib_client";
 import { download } from "../lib/util";
+import { SongSeparator } from "./SongSeparator";
+import { SongAlignment } from "./SongAlignment";
 
 // TODO: handle bad jellyfin credentiaals?
 
@@ -16,8 +18,12 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
     const [lrcSearchArtistName, setLrcSearchArtistName] = useState("");
     const [lrcSearchAlbumName, setLrcSearchAlbumName] = useState("");
     const [lyrics, setLyrics] = useState([]);
+    const [selectedLyrics, setSelectedLyrics] = useState(null);
     const [loadingAudio, setLoadingAudio] = useState(true);
     const [loadingPercent, setLoadingPercent] = useState(0);
+    const [origAudioBlob, setOrigAudioBlob] = useState(null);
+    const [origAudioPos, setOrigAudioPos] = useState(0);
+    const [audioHash, setAudioHash] = useState(null);
     const audioRef = useRef<HTMLAudioElement>(null);
 
     async function fetchItem(setDefaults = true) {
@@ -56,6 +62,7 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
                     if(audioRef.current){
                         audioRef.current.src = URL.createObjectURL(blob);
                         setLoadingAudio(false);
+                        setOrigAudioBlob(blob);
                     }else{
                         console.warn("Audio el ref not found");
                     }
@@ -72,6 +79,15 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
         fetchItem();
         // also fetch the audio itself lol
         fetchAudio();
+
+        const updateInterval = setInterval(() => {
+            if(!audioRef.current) return;
+            setOrigAudioPos(audioRef.current.currentTime);
+        }, 10);
+
+        return () => {
+            clearInterval(updateInterval);
+        };
     }, []);
 
     if(item) console.log(findLyrics(item));
@@ -86,6 +102,14 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
             duration: ticksToMs(item["RunTimeTicks"]) / 1000,
         };
         let lyricData = await (mode == "get" ? lyricsClient.get(query) : lyricsClient.search(query));
+        for(let i = 0; i < lyricData.length; i++){
+            lyricData[i]["index"] = i;
+        }
+        if(mode == "get"){
+            setSelectedLyrics(lyricData);
+        }else if(lyricData.length > 0){
+            setSelectedLyrics(lyricData[0]);
+        }
         if(lyricData){
             if(mode == "get"){
                 setLyrics([lyricData]);
@@ -141,6 +165,7 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
                                 <div className="m-auto p-4 max-w-md bg-secondary text-secondary-foreground rounded-md" key={item["id"]}>
                                     <span className="font-bold">{item["trackName"]} - {item["artistName"]} from {item["albumName"]}</span>
                                     <textarea className="w-full p-2 rounded-md m-2" placeholder="Lyrics" name="lyrics" value={item["syncedLyrics"]} readOnly />
+                                    <button onClick={() => setSelectedLyrics(item)} className="w-full p-2 rounded-md m-2 bg-accent text-accent-foreground" disabled={selectedLyrics && selectedLyrics["id"] == item["id"]}>{(selectedLyrics && selectedLyrics["id"] == item["id"]) ? "Selected" : "Select"}</button>
                                 </div>
                             );
                         })}
@@ -150,8 +175,22 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
                     Stem Seperation
                 </h2>
                 <p>
-                    This may take a bit (up to a minute) to process depending on song length but is def doable realtime. This will be gpu intense.
+                    This may take a bit (up to a minute) to process depending on song length but is def doable realtime. This will be gpu intense (for the processing server).
                 </p>
+                {!origAudioBlob && <p>No audio loaded.</p>}
+                {origAudioBlob && <>
+                    <SongSeparator inputAudio={origAudioBlob} onFinish={(hash) => setAudioHash(hash)} />
+                </>}
+                <h2 className="text-xl font-bold">
+                    Alignment
+                </h2>
+                <p>
+                    This is a lot faster but makes the timing percise.
+                </p>
+                {!audioHash && <p>Please seperate the audio first.</p>}
+                {audioHash && <>
+                    <SongAlignment lyrics={selectedLyrics} inputHash={audioHash} inputPreviewTime={origAudioPos} />
+                </>}
             </>
         }
         {

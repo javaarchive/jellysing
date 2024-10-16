@@ -1,5 +1,5 @@
 import {useState} from "react";
-import { getDefaultJellyfinClient } from "../lib/jellyfin_client";
+import { getDefaultBackendClient } from "../lib/backend_client";
 
 export default function JellysingBackendPicker(props: any) { 
 
@@ -8,7 +8,15 @@ export default function JellysingBackendPicker(props: any) {
     const [validating, setValidating] = useState(false);
     
     async function validateCredentials() {
-        
+        setValidating(true);
+        const backend = getDefaultBackendClient();
+        backend.updateCredentials(server, key);
+        if(await backend.check()){
+            alert("Credentials are valid!");
+        }else{
+            alert("Credentials are invalid");
+        }
+        setValidating(false);
     }
 
     return (

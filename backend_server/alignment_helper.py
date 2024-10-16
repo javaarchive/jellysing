@@ -49,14 +49,15 @@ class AlignmentTask(BaseModel):
         return [
             {
                 # convert ms to seconds
-                "start": line.startTime / 1000,
-                "end": line.endTime / 1000,
+                # also hack is to add padding
+                "start": float(line.startTime) / 1000.0,
+                "end": float(line.endTime) / 1000.0,
                 "text": line.text
             } for line in self.lyrics
         ]
 # load model
 print("=== LOAD ALIGNEMNT MODEL ===")
-model, model_metadata = whisperx.alignment.load_align_model(os.getenv("ALIGN_MODEL", "en"), device = device)
+model, model_metadata = whisperx.alignment.load_align_model(os.getenv("ALIGN_MODEL", "en"), model_name = os.getenv("ALIGN_MODEL_NAME", "jonatasgrosman/wav2vec2-large-xlsr-53-english"), device = device)
 print("=== ALIGNMENT MODEL LOADED ===")
 print(model, model_metadata)
 
@@ -64,5 +65,6 @@ def align(task: AlignmentTask, input_path: str):
     print("aligning")
     audio = whisperx.audio.load_audio(input_path)
     transcript = task.get_alignable_segments()
-    alignment = whisperx.alignment.align(transcript, model, model_metadata, audio, device, print_progress=True, return_char_alignments=True)
+    # old: replace input_path with audio
+    alignment = whisperx.alignment.align(transcript, model, model_metadata, audio, device,  interpolate_method = "linear", print_progress=True, return_char_alignments=True)
     return alignment

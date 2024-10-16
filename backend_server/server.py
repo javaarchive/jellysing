@@ -37,6 +37,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Length"]
 )
 
 try:
@@ -53,9 +54,13 @@ sep.load_model(model_filename = os.getenv("SEP_MODEL", "model.onnx"))
 print("=== Model loaded ===")
 
 def separate_file(filepath: str, queue: queue.Queue):
-    output = sep.separate(filepath)
-    queue.put(output)
-    return output
+    try:
+        output = sep.separate(filepath)
+        queue.put(output)
+        return output
+    except Exception as ex:
+        print("Error separating", ex)
+        queue.put(None)
 
 # sse stream
 async def processing_generator(tempfile_path: str):
@@ -83,10 +88,21 @@ async def processing_generator(tempfile_path: str):
         "read": read_amount,
         "hash": hash
     }))
+    file.close()
+    if os.path.exists(os.path.join(os.getcwd(), "data", hash + ".wav")):
+        print("using existing file cached for",hash)
+        yield format_message("results", json.dumps({
+            "time": time.time(),
+            "filenames": [hash + ".0.wav", hash + ".1.wav"],
+            "hash": hash,
+            "cache": True
+        }))
+        os.unlink(tempfile_path)
+        return
     yield format_message("infer_queued", json.dumps({
         "time": time.time(),
     }))
-    file.close()
+    
     async with infer_lock:
         yield format_message("infer_start", json.dumps({
             "time": time.time(),
@@ -112,24 +128,34 @@ async def processing_generator(tempfile_path: str):
         result = result_queue.get()
         # move results
         filenames = []
-        for i in range(len(result)):
-            final_filename = hash + "." + str(i) + ".wav"
+        if result:
+            for i in range(len(result)):
+                final_filename = hash + "." + str(i) + ".wav"
+                try:
+                    os.rename(os.path.join(os.getcwd(), "data", result[i]), os.path.join(os.getcwd(), "data", final_filename))
+                except:
+                    # file alr exists so this failed
+                    print("Deleting temp", result[i])
+                    os.unlink(os.path.join(os.getcwd(), "data", result[i]))
+                filenames.append(final_filename)
+            # TODO figure out deletion of files
+            yield format_message("results", json.dumps({
+                "time": time.time(),
+                "filenames": filenames,
+                "hash": hash,
+                "cache": False
+            }))
             try:
-                os.rename(os.path.join(os.getcwd(), "data", result[i]), os.path.join(os.getcwd(), "data", final_filename))
+                shutil.copyfile(tempfile_path, os.path.join(os.getcwd(), "data", hash + ".wav"))
             except:
-                # file alr exists so this failed
-                os.unlink(os.path.join(os.getcwd(), "data", result[i]))
-            filenames.append(final_filename)
-        # TODO figure out deletion of files
-        yield format_message("results", json.dumps({
-            "time": time.time(),
-            "filenames": filenames,
-            "hash": hash,
-        }))
-        try:
-            shutil.copyfile(tempfile_path, os.path.join(os.getcwd(), "data", hash + ".wav"))
-        except:
-            pass
+                pass
+        else:
+            yield format_message("error", json.dumps({
+                "time": time.time(),
+                "error": "Error processing seperation",
+                "hash": hash,
+                "cache": False
+            }))
         os.unlink(tempfile_path)
 
 @app.post("/separate")
@@ -160,19 +186,29 @@ def is_allowed_reference(reference: str):
     return all(c in "abcdef0123456789" for c in reference)
 
 def align_thread_target(task: AlignmentTask, input_path: str, result_queue: queue.Queue):
-    alignment = align(task, input_path)
-    result_queue.put(alignment)
+    try:
+        alignment = align(task, input_path)
+        result_queue.put(alignment)
+    except Exception as ex:
+        print("Error aligning", ex)
+        result_queue.put(None)
 
 async def alignment_generator(input_path: str, task: AlignmentTask):
 
     def format_message(type: str, data: str):
         return f"event: {type}\ndata: {data}\n\n"
 
+    yield format_message("infer_queued", json.dumps({
+        "time": time.time(),
+    }))
     async with infer_lock:
         result_queue = queue.Queue()
         thread = threading.Thread(target=align_thread_target, args=(task, input_path, result_queue,))
         thread.start()
         ticks = 0
+        yield format_message("infer_start", json.dumps({
+            "time": time.time(),
+        }))
         while True:
             if not thread.is_alive():
                 break
