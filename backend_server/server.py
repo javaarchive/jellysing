@@ -50,7 +50,7 @@ from audio_separator.separator import Separator
 
 print("=== Loading model ===")
 sep = Separator(output_dir = os.path.join(os.getcwd(), "data"))
-sep.load_model(model_filename = os.getenv("SEP_MODEL", "model.onnx"))
+sep.load_model(model_filename = os.getenv("SEP_MODEL", "UVR-MDX-NET-Inst_HQ_3.onnx"))
 print("=== Model loaded ===")
 
 def separate_file(filepath: str, queue: queue.Queue):

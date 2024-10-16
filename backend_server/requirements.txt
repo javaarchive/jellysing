@@ -2,5 +2,11 @@ fastapi
 python-multipart
 uvicorn
 audio-separator[gpu]
+python-dotenv
+# stupid int deprecation at  https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+# todo figure out what local does
+# numpy==1.19.5
+setuptools==70.0
+networkx==2.8.8
 # this is because they have a good forced alignment section
 git+https://github.com/m-bain/whisperx.git
