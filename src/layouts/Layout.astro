@@ -4,6 +4,7 @@ import Head from "../components/Head.astro";
 
 interface Props {
 	title: string;
+	reset?: boolean;
 }
 
 const { title } = Astro.props;
@@ -14,7 +15,7 @@ const { title } = Astro.props;
 	<head>
 		<Head {...Astro.props} />
 	</head>
-	<body class = "bg-background">
+	<body class = {"bg-background" + (Astro.props.reset ? " m-0 p-0 min-h-full min-w-full" : "")}>
 		<slot />
 	</body>
 </html>

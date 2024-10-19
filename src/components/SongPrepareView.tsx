@@ -4,6 +4,8 @@ import { getDefaultLyricsClient } from "../lib/lrclib_client";
 import { download } from "../lib/util";
 import { SongSeparator } from "./SongSeparator";
 import { SongAlignment } from "./SongAlignment";
+import Jsz from "../lib/jsz";
+import { BlobWriter, ZipWriter } from "@zip.js/zip.js";
 
 // TODO: handle bad jellyfin credentiaals?
 
@@ -25,6 +27,12 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
     const [origAudioPos, setOrigAudioPos] = useState(0);
     const [audioHash, setAudioHash] = useState(null);
     const audioRef = useRef<HTMLAudioElement>(null);
+    const [vocalBlob, setVocalBlob] = useState(null);
+    const [instrumentalBlob, setInstrumentalBlob] = useState(null);
+    const [alignment, setAlignment] = useState(null);
+    const [prepareStatus, setPrepareStatus] = useState("");
+    const [jszBlob, setJszBlob] = useState(null);
+    const [jszBlobUrl, setJszBlobUrl] = useState("");
 
     async function fetchItem(setDefaults = true) {
         const client = getDefaultJellyfinClient();
@@ -73,6 +81,25 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
                 },
             })
         }
+    }
+
+    async function prepareJsz(){
+        let jsz = new Jsz();
+        setPrepareStatus("Preparing...");
+        jsz.setTitle(item["Name"]);
+        jsz.setArtists(item["Artists"]);
+        jsz.setAlbum(item["Album"]);
+        jsz.addInstrumentalsTrackFile(instrumentalBlob);
+        jsz.addVocalsTrackFile(vocalBlob);
+        setPrepareStatus("Preparing file...");
+        // TODO: duration metadata?
+        const blobWriter = new BlobWriter();
+        const zipWriter = new ZipWriter(blobWriter);
+        await jsz.writeToZip(zipWriter);
+        const blob = await blobWriter.getData();
+        setJszBlob(blob);
+        setJszBlobUrl(URL.createObjectURL(blob));
+        setPrepareStatus("");
     }
 
     useEffect(() => {
@@ -179,7 +206,7 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
                 </p>
                 {!origAudioBlob && <p>No audio loaded.</p>}
                 {origAudioBlob && <>
-                    <SongSeparator inputAudio={origAudioBlob} onFinish={(hash) => setAudioHash(hash)} />
+                    <SongSeparator inputAudio={origAudioBlob} onFinish={(hash) => setAudioHash(hash)} onInstrumentalAudioBlob={setInstrumentalBlob} onVocalAudioBlob={setVocalBlob} />
                 </>}
                 <h2 className="text-xl font-bold">
                     Alignment
@@ -189,8 +216,14 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
                 </p>
                 {!audioHash && <p>Please seperate the audio first.</p>}
                 {audioHash && <>
-                    <SongAlignment lyrics={selectedLyrics} inputHash={audioHash} inputPreviewTime={origAudioPos} />
+                    <SongAlignment lyrics={selectedLyrics} inputHash={audioHash} inputPreviewTime={origAudioPos} onAlignment={(alignment) => setAlignment(alignment)} />
                 </>}
+                {
+                    (item && audioHash && alignment && lyrics && vocalBlob && instrumentalBlob) && <>
+                        <button className="w-full p-2 rounded-md m-2 bg-accent text-accent-foreground" onClick={prepareJsz} disabled={prepareStatus && prepareStatus.length > 0}>{prepareStatus ? prepareStatus: "Create jsz file"}</button>
+                        {jszBlob && <a href={jszBlobUrl} download={item["Name"] + ".jsz"} className="w-full block p-2 rounded-md m-2 text-center bg-accent text-accent-foreground">Download jsz file</a>}
+                    </>
+                }
             </>
         }
         {

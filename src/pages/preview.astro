@@ -1,0 +1,15 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CenteredContent from '../components/CenteredContent.astro';
+import { PreviewPage } from '../components/Preview';
+---
+
+<Layout title="Preview jsz file" reset={true}> 
+	<main class = "p-0 m-0 min-h-screen min-w-screen h-screen">
+		<PreviewPage client:only="react" />
+	</main>
+</Layout>
+
+<style>
+	
+</style>
