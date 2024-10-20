@@ -2,11 +2,14 @@
 import Layout from '../layouts/Layout.astro';
 import CenteredContent from '../components/CenteredContent.astro';
 import { PreviewPage } from '../components/Preview';
+
+const displayMode = Astro.url.searchParams.get("displayMode") || "words";
+const renderMode = Astro.url.searchParams.get("renderMode") || "auto";
 ---
 
 <Layout title="Preview jsz file" reset={true}> 
 	<main class = "p-0 m-0 min-h-screen min-w-screen h-screen">
-		<PreviewPage client:only="react" />
+		<PreviewPage client:only="react" displayMode={displayMode} renderMode={renderMode} />
 	</main>
 </Layout>
 

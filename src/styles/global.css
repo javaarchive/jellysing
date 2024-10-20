@@ -20,6 +20,19 @@
     --input: 267 30% 18%;
     --ring: 267 56% 53%;
     --radius: 0.5rem;
+
+    /* defaults */
+    --partial-progressed-color: gold;
+    --partial-initial-color: white;
+
+    --progress-inject: 0;
+    --progress-inject-percent: 0%;
+
+}
+
+.debug {
+    color: var(--partial-initial-color);
+    margin-bottom: 1.5em;
 }
 
 .dark {
@@ -58,4 +71,41 @@ html {
     height: 100%;
     padding: 0;
     margin: 0;
+}
+
+/*
+.text-partial {
+    color: var(--partial-initial-color);
+    overflow: visible;
+}
+
+
+.text-partial::before {
+    display: inline-flex;
+    position: relative;
+    content: attr(data-text);
+    position: absolute;
+    color: var(--partial-progressed-color);
+    overflow: hidden;
+    white-space: nowrap;
+    width: var(--progress-inject-percent);
+    max-width: 100%;
+}
+    old stuff
+    */
+
+.text-partial {
+    /* some gradient hack */
+    background: linear-gradient(to right, var(--partial-progressed-color) var(--progress-inject-percent), var(--partial-initial-color) 0%, var(--partial-initial-color) 100%, var(--partial-progressed-color) 0%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-attachment: fixed;
+}
+
+.font-outline-2 {
+    -webkit-text-stroke: 2px black;
+}
+.font-outline-4 {
+    -webkit-text-stroke: 4px black;
 }

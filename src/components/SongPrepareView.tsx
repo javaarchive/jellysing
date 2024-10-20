@@ -91,6 +91,7 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
         jsz.setAlbum(item["Album"]);
         jsz.addInstrumentalsTrackFile(instrumentalBlob);
         jsz.addVocalsTrackFile(vocalBlob);
+        jsz.updateAlignment(alignment);
         setPrepareStatus("Preparing file...");
         // TODO: duration metadata?
         const blobWriter = new BlobWriter();

@@ -4,11 +4,16 @@ import Jsz from "../lib/jsz";
 import SelectJszFile from "./SelectJszFile";
 import Player from "./Player";
 
-export default function Preview(){
+interface PreviewProps {
+    displayMode?: string;
+    renderMode?: string;
+}
+
+export default function Preview(props: PreviewProps){
     let [jsz, setJsz] = useState<Jsz>();
 
     return <>
-        {jsz ? <Player jsz={jsz} />:<SelectJszFile onJszLoaded={setJsz}/>}
+        {jsz ? <Player jsz={jsz} displayMode={props.displayMode} renderMode={props.renderMode} />:<SelectJszFile onJszLoaded={setJsz}/>}
     </>
 }
 

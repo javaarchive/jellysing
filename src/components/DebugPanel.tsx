@@ -12,7 +12,7 @@ export default function DebugPanel() {
     const debugMethods = {
         "lyrics": (input: string) => {
             return parseLRC(input, -1);
-        }
+        },
     }
 
     function generateDebugCallback(type){
