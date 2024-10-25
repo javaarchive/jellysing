@@ -6,6 +6,7 @@ export interface JszTimingHints {
     vocalTrackVolumeUnfocused: number;
     instrumentalTrackVolumeUnfocused: number;
     textDisplayTimepadding?: number;
+    useFocusUnfocusVolumeControl?: boolean;
 }
 
 export interface JszStyling {
@@ -91,7 +92,7 @@ export default class Jsz {
             timingHints: {
                 vocalTrackVolumeFocused: 0.0,
                 instrumentalTrackVolumeFocused: 1.0,
-                vocalTrackVolumeUnfocused: 0.0,
+                vocalTrackVolumeUnfocused: 1.0,
                 instrumentalTrackVolumeUnfocused: 1.0,
                 textDisplayTimepadding: 1.0
             },
@@ -269,6 +270,41 @@ export default class Jsz {
 
     getSegmentDisplay(index){
         return this.visualCache[index];
+    }
+
+    tempVocalOverride = false;
+
+    isFocused(pos: number){
+        const segment = this.getSegment(pos);
+        if(segment){
+            return true;
+        }
+        return false;
+    }
+
+    getVocalVolume(pos: number){
+        if(this.tempVocalOverride){
+            return this.manifest.timingHints.vocalTrackVolumeUnfocused;
+        }
+        if(this.manifest.timingHints.useFocusUnfocusVolumeControl) {
+            if(this.isFocused(pos)){
+                return this.manifest.timingHints.vocalTrackVolumeFocused;
+            }
+            return this.manifest.timingHints.vocalTrackVolumeUnfocused;
+        }else{
+            return this.manifest.timingHints.vocalTrackVolumeFocused;
+        }
+    }
+
+    getInstrumentalVolume(pos: number){
+        if(this.manifest.timingHints.useFocusUnfocusVolumeControl) {
+            if(this.isFocused(pos)){
+                return this.manifest.timingHints.instrumentalTrackVolumeFocused;
+            }
+            return this.manifest.timingHints.instrumentalTrackVolumeUnfocused;
+        }else{
+            return this.manifest.timingHints.instrumentalTrackVolumeFocused;
+        }
     }
 }
 

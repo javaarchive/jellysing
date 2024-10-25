@@ -59,7 +59,7 @@ export function SingleLineDisplay(props: TextDisplayModuleProps){
         {segment &&
             <SegmentTextDisplay {...props} segment={segment} />
         }
-        {!segment && <span className="no-segment debug">{props.pos}</span>}
+        {!segment && <span className="no-segment debug">{props.pos.toFixed(2)}</span>}
     </div>;
 }
 
@@ -75,7 +75,7 @@ export function ForesightLinesDisplay(props: TextDisplayModuleProps){
             nextSegment && 
             <SegmentTextDisplay {...props} segment={nextSegment} />
         }
-        {!segment && <span className="no-segment debug">{props.pos}</span>}
+        {!segment && <span className="no-segment debug">{props.pos.toFixed(2)}</span>}
     </div>;
 }
 
@@ -142,11 +142,28 @@ export default function Player(props: PlayerProps){
                     vocalAudio.current.seek(masterPos);
                 }
             }
+            
             setPlaybackPos(masterPos);
             if(running) requestAnimationFrame(tick);
         }
+
+        function importantPerciseTick(){
+
+            const masterPos = instrumentalAudio.current.seek();
+
+            const desiredVocalVolume = props.jsz.getVocalVolume(masterPos);
+            const desiredInstrumentalVolume = props.jsz.getInstrumentalVolume(masterPos);
+            if(vocalAudio.current.volume() != desiredVocalVolume){
+                vocalAudio.current.volume(desiredVocalVolume);
+            }
+            if(instrumentalAudio.current.volume() != desiredInstrumentalVolume){
+                instrumentalAudio.current.volume(desiredInstrumentalVolume);
+            }
+        }
+        const importantPerciseTickInterval = setInterval(importantPerciseTick, 100);
         requestAnimationFrame(tick);
         return () => {
+            clearInterval(importantPerciseTickInterval);
             running = false;
         };
     }, [props.jsz]); 
@@ -176,13 +193,17 @@ export default function Player(props: PlayerProps){
             if(instrumentalAudio.current) instrumentalAudio.current.seek(playbackPos + 5);
             if(vocalAudio.current) vocalAudio.current.seek(playbackPos + 5);
         } else if(ev.code == "KeyV"){
-            if(vocalAudio.current){
+            if(props.jsz.manifest.timingHints.vocalTrackVolumeUnfocused == 0.0){
+                props.jsz.manifest.timingHints.vocalTrackVolumeUnfocused = 1.0;
+            }
+            props.jsz.tempVocalOverride = !props.jsz.tempVocalOverride;
+            /*if(vocalAudio.current){
                 if(vocalAudio.current.volume()){
                     vocalAudio.current.volume(0.0);
                 }else{
                     vocalAudio.current.volume(1.0);
                 }
-            }
+            }*/
         }
     }
 

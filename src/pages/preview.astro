@@ -5,11 +5,13 @@ import { PreviewPage } from '../components/Preview';
 
 const displayMode = Astro.url.searchParams.get("displayMode") || "words";
 const renderMode = Astro.url.searchParams.get("renderMode") || "auto";
+const focusVolControlBeta = Astro.url.searchParams.get("focusVol") == "1";
+const forceVocalsOnUnfocused = Astro.url.searchParams.get("forceUnfocusedVocals") == "1";
 ---
 
 <Layout title="Preview jsz file" reset={true}> 
 	<main class = "p-0 m-0 min-h-screen min-w-screen h-screen">
-		<PreviewPage client:only="react" displayMode={displayMode} renderMode={renderMode} />
+		<PreviewPage client:only="react" displayMode={displayMode} renderMode={renderMode} focusVolControlBeta={focusVolControlBeta} forceVocalsOnUnfocused={forceVocalsOnUnfocused} />
 	</main>
 </Layout>
 
