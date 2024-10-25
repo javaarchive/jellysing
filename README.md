@@ -1,2 +1,2 @@
 # Jellysing
-just another karaoke, but with a tad bit of machine learning 
+just another karaoke app, but with a tad bit of machine learning 
