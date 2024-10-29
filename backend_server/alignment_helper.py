@@ -57,7 +57,11 @@ class AlignmentTask(BaseModel):
         ]
 # load model
 print("=== LOAD ALIGNEMNT MODEL ===")
-model, model_metadata = whisperx.alignment.load_align_model(os.getenv("ALIGN_MODEL", "en"), model_name = os.getenv("ALIGN_MODEL_NAME", "jonatasgrosman/wav2vec2-large-xlsr-53-english"), device = device)
+# model_name = os.getenv("ALIGN_MODEL_NAME", "jonatasgrosman/wav2vec2-large-xlsr-53-english")
+model_sel = {}
+if os.getenv("ALIGN_MODEL_NAME"):
+    model_sel["model_name"] = os.getenv("ALIGN_MODEL_NAME")
+model, model_metadata = whisperx.alignment.load_align_model(os.getenv("ALIGN_MODEL", "en"), device = device, **model_sel)
 print("=== ALIGNMENT MODEL LOADED ===")
 print(model, model_metadata)
 
@@ -66,5 +70,5 @@ def align(task: AlignmentTask, input_path: str):
     audio = whisperx.audio.load_audio(input_path)
     transcript = task.get_alignable_segments()
     # old: replace input_path with audio
-    alignment = whisperx.alignment.align(transcript, model, model_metadata, audio, device,  interpolate_method = "linear", print_progress=True, return_char_alignments=True)
+    alignment = whisperx.alignment.align(transcript, model, model_metadata, audio, device, print_progress=True, return_char_alignments=True)
     return alignment

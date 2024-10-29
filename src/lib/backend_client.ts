@@ -51,16 +51,22 @@ class BackendClient {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + this.key,
         };
-        const response = await fetch(this.server + path, {
-            method: method,
-            headers: headers,
-            body: data ? JSON.stringify(data): data,
-        });
-        if(raw) return response; // for media download
-        if(response.ok) {
-            return (await response.json());
-        } else {
-            throw new Error(response.statusText + " " + (await response.text()));
+        if(!data) delete headers["Content-Type"];
+        try{
+            const response = await fetch(this.server + path, {
+                method: method,
+                headers: headers,
+                body: data ? JSON.stringify(data): data,
+            });
+            if(raw) return response; // for media download
+            if(response.ok) {
+                return (await response.json());
+            } else {
+                throw new Error("Fetch response not ok: " + response.statusText + " " + (await response.text()));
+            }
+        }catch(ex){
+            console.error("Error fetching request", ex);
+            throw ex;
         }
     }
 
