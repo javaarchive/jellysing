@@ -181,6 +181,10 @@ class BrowserJellyfinClient extends JellyfinClient {
         };
     }
 
+    isLoggedIn(): boolean {
+        const basicInfo = this.tryGetBasicInfo();
+        return basicInfo != null && basicInfo.userId != null;
+    }
 }
 
 let defaultClient = new BrowserJellyfinClient();
