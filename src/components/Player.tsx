@@ -113,6 +113,12 @@ export default function Player(props: PlayerProps){
         setRenderMode(props.renderMode || "auto");
     }, [props.renderMode]);
 
+    function resync(){
+        if(!instrumentalAudio.current || !vocalAudio.current) return;
+        let pos = instrumentalAudio.current.seek();
+        vocalAudio.current.seek(pos);
+    }
+
     useEffect(() => {
         console.log(props.jsz);
         let running = true;
@@ -204,6 +210,7 @@ export default function Player(props: PlayerProps){
                     vocalAudio.current.volume(1.0);
                 }
             }*/
+           resync();
         }
     }
 
