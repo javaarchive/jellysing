@@ -71,12 +71,6 @@ export function SongAlignment(props: SongAlignmentProps) {
         return alignment["segments"].find(segment => segment.start <= pos && pos <= segment.end);
     }
 
-    let [alignmentOverride, setAlignmentOverride] = useState("");
-
-    function overrideAlignment(){
-        setAlignment(JSON.parse(alignmentOverride));
-    }
-
     const seg = alignment ? getSegment(props.inputPreviewTime) : null;
 
     return <>
@@ -86,7 +80,6 @@ export function SongAlignment(props: SongAlignmentProps) {
         <button onClick={() => performAlignment()} className="w-full p-2 rounded-md m-2 bg-accent text-accent-foreground">{aligning ? alignmentStatus: "Align"}</button>
         <textarea className="w-full p-2 rounded-md m-2" placeholder="Alignment data" name="alignment" value={JSON.stringify(alignment, null, 4)} readOnly />
         <div className="min-h-96 max-h-96">
-        <textarea onClick={overrideAlignment} value={alignmentOverride} onChange={(ev) => setAlignmentOverride(ev.target.value)} className="w-full p-2 rounded-md m-2" placeholder="Alignment data override" name="alignment-override" /> 
         {
             alignment && alignment.segments && <>
                 <h1 className="text-xl font-bold">
