@@ -3,18 +3,17 @@ import Layout from '../../layouts/Layout.astro';
 import CenteredContent from '../../components/CenteredContent.astro';
 import SearchView from '../../components/SearchView';
 import SongPrepareView from '../../components/SongPrepareView';
-import JellyfinTrackPrepareView from '../../components/JellyfinTrackPrepareView';
 
 const { itemId } = Astro.params;
 ---
 
-<Layout title="Prepare a song using Jellysing using the in development v2 workflow.">
+<Layout title="Prepare a song using Jellysing.">
 	<main>
 		<CenteredContent>
 			<h1 class = "text-center text-2xl font-extralight">
 				Prepare Song
 			</h1>
-			<JellyfinTrackPrepareView itemId={itemId} client:visible />
+			<SongPrepareView itemId={itemId} client:visible />
 		</CenteredContent>
 	</main>
 </Layout>

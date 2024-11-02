@@ -1,5 +1,13 @@
 import { BlobReader, BlobWriter, TextReader, TextWriter, ZipReader, type ZipWriter } from "@zip.js/zip.js";
 
+export interface SongMetadata {
+    title: string;
+    artists: string[];
+    album: string | null;
+    duration: number; // in seconds
+    image: string | null;
+}
+
 export interface JszTimingHints {
     vocalTrackVolumeFocused: number;
     instrumentalTrackVolumeFocused: number;

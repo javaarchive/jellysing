@@ -50,7 +50,7 @@ export function SongAlignment(props: SongAlignmentProps) {
                 setAlignmentStatus("processing...");
             }else if(type == "infer_progress"){
                 pings ++;
-                setAlignmentStatus("processing: last ping at " + data["time"] + " count " + pings);
+                setAlignmentStatus("processing: last ping at " + data["time"] + " count " + pings + " keep waiting...");
             }else if(type == "alignment"){
                 setAlignmentStatus("done!");
                 setAligning(false);

@@ -169,6 +169,7 @@ class BrowserJellyfinClient extends JellyfinClient {
         if(!tryGetLocalStorage()) return false;
         tryGetLocalStorage().setItem("jellyfin-user-id", this.authResult["User"]["Id"]);
         tryGetLocalStorage().setItem("jellyfin-server-id", this.authResult["User"]["ServerId"]);
+        // doesn't exist on auth response for some reason
         tryGetLocalStorage().setItem("jellyfin-server-name", this.authResult["User"]["ServerName"]);
     }
 
