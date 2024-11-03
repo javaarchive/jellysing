@@ -22,23 +22,29 @@ from fastapi import UploadFile
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse
+from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel
 
 from alignment_helper import *
 
-app = FastAPI()
-
-# add wildcard cors
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+app = FastAPI(middleware = [Middleware(CORSMiddleware,
+    allow_origins=["*", "null"],
+    # allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Content-Length"]
-)
+    expose_headers=["Content-Length"])])
+
+# add wildcard cors
+#app.add_middleware(
+#    CORSMiddleware,
+#    allow_origins=["*", "null"],
+#    allow_credentials=True,
+#    allow_methods=["*"],
+#    allow_headers=["*"],
+#    expose_headers=["Content-Length"]
+#)
 
 try:
     os.mkdir("data")
@@ -139,16 +145,20 @@ async def processing_generator(tempfile_path: str):
                     os.unlink(os.path.join(os.getcwd(), "data", result[i]))
                 filenames.append(final_filename)
             # TODO figure out deletion of files
+            try:
+                shutil.copyfile(tempfile_path, os.path.join(os.getcwd(), "data", hash + ".wav"))
+            except:
+                pass
+                
             yield format_message("results", json.dumps({
                 "time": time.time(),
                 "filenames": filenames,
                 "hash": hash,
                 "cache": False
             }))
-            try:
-                shutil.copyfile(tempfile_path, os.path.join(os.getcwd(), "data", hash + ".wav"))
-            except:
-                pass
+            
+            await asyncio.sleep(5)
+            yield format_message("goodbye", json.dumps({}));
         else:
             yield format_message("error", json.dumps({
                 "time": time.time(),
@@ -229,6 +239,10 @@ async def alignment_generator(input_path: str, task: AlignmentTask):
             "time": time.time(),
             "alignment": alignment,
         }))
+        await asyncio.sleep(5)
+        yield format_message("goodbye", json.dumps({}));
+
+        
 
 @app.post("/align")
 async def align_route(task: AlignmentTask):
@@ -254,4 +268,4 @@ app.mount("/data", StaticFiles(directory="data"), name="data")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)), timeout_keep_alive=60)

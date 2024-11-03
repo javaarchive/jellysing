@@ -15,6 +15,7 @@ export interface JszTimingHints {
     instrumentalTrackVolumeUnfocused: number;
     textDisplayTimepadding?: number;
     useFocusUnfocusVolumeControl?: boolean;
+    backgroundVideoMuted?: boolean;
 }
 
 export interface JszStyling {
@@ -88,9 +89,11 @@ export default class Jsz {
 
     vocalsTrackFile?: Blob;
     instrumentalsTrackFile?: Blob;
+    backgroundVideoFile?: Blob;
 
     instrumentalFormatHint = "wav";
     vocalFormatHint = "wav";
+    backgroundVideoFormatHint = "mp4";
 
     visualCache = null;
 
@@ -102,7 +105,8 @@ export default class Jsz {
                 instrumentalTrackVolumeFocused: 1.0,
                 vocalTrackVolumeUnfocused: 1.0,
                 instrumentalTrackVolumeUnfocused: 1.0,
-                textDisplayTimepadding: 1.0
+                textDisplayTimepadding: 1.0,
+                backgroundVideoMuted: true
             },
             styling: {
                 backgroundColor: "#000000",
@@ -229,6 +233,10 @@ export default class Jsz {
             console.warn("Jsz: No instrumentals track file");
         }
 
+        if(this.backgroundVideoFile){
+            await zip.add("background." + this.backgroundVideoFormatHint, new BlobReader(this.backgroundVideoFile));
+        }
+
         // TODO; background image and/or video support
 
         await zip.close();
@@ -247,6 +255,9 @@ export default class Jsz {
             }else if(entry.filename == "instrumentals.wav" || entry.comment == "tag:instrumentals") {
                 this.instrumentalsTrackFile = await entry.getData(new BlobWriter());
                 this.instrumentalFormatHint = entry.filename.split(".").pop();
+            } else if(entry.filename == "background.mp4" || entry.filename == "background.webm" || entry.comment == "tag:background") { 
+                this.backgroundVideoFile = await entry.getData(new BlobWriter());
+                this.backgroundVideoFormatHint = entry.filename.split(".").pop();
             }
             // TODO: background image and/or video support
         }

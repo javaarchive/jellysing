@@ -99,11 +99,13 @@ export default function Player(props: PlayerProps){
     // inst track is controller
     let instrumentalAudio = useRef(null);
     let vocalAudio = useRef(null);
+    let backgroundVideo = useRef(null);
 
     let [playbackPos, setPlaybackPos] = useState(0);
     let [userInteracted, setUserInteracted] = useState(false);
     let [displayMode, setDisplayMode] = useState(props.displayMode || "words");
     let [renderMode, setRenderMode] = useState(props.renderMode || "auto");
+    let [backgroundPrerequistesLoaded, setBackgroundPrerequisitesLoaded] = useState(false);
 
     useEffect(() => {
         setDisplayMode(props.displayMode || "words");
@@ -117,6 +119,15 @@ export default function Player(props: PlayerProps){
         if(!instrumentalAudio.current || !vocalAudio.current) return;
         let pos = instrumentalAudio.current.seek();
         vocalAudio.current.seek(pos);
+    }
+
+    function seekAll(pos: number){
+        if(instrumentalAudio.current) instrumentalAudio.current.seek(pos);
+        if(vocalAudio.current) vocalAudio.current.seek(pos);
+        if(props.jsz.backgroundVideoFile){
+            if(backgroundVideo.current) backgroundVideo.current.currentTime = pos;
+        }
+        setPlaybackPos(pos);
     }
 
     useEffect(() => {
@@ -139,6 +150,19 @@ export default function Player(props: PlayerProps){
             preload: true,
             format: ["wav"]
         });
+
+        if(props.jsz.backgroundVideoFile){
+            let backgroundVideoBlobURL = URL.createObjectURL(props.jsz.backgroundVideoFile);
+            backgroundVideo.current.preload = "auto";
+            backgroundVideo.current.src = backgroundVideoBlobURL;
+            backgroundVideo.current.load();
+            backgroundVideo.current.addEventListener("canplaythrough", () => {
+                setBackgroundPrerequisitesLoaded(true);
+            });
+        }else{
+            setBackgroundPrerequisitesLoaded(true);
+        }
+        
         function tick(){
             if(!instrumentalAudio.current || !vocalAudio.current) return;
             const masterPos = instrumentalAudio.current.seek();
@@ -185,19 +209,27 @@ export default function Player(props: PlayerProps){
                     if(vocalAudio.current){
                         vocalAudio.current.pause();
                     }
+                    if(props.jsz.backgroundVideoFile){
+                        if(backgroundVideo.current){
+                            backgroundVideo.current.pause();
+                        }
+                    }
                 }else{
                     instrumentalAudio.current.play();
                     if(vocalAudio.current){
                         vocalAudio.current.play();
                     }
+                    if(props.jsz.backgroundVideoFile){
+                        if(backgroundVideo.current){
+                            backgroundVideo.current.play();
+                        }
+                    }
                 }
             }
         }else if(ev.code == "ArrowLeft"){
-            if(instrumentalAudio.current) instrumentalAudio.current.seek(playbackPos - 5);
-            if(vocalAudio.current) vocalAudio.current.seek(playbackPos - 5);
+            seekAll(playbackPos - 5);
         } else if(ev.code == "ArrowRight") {
-            if(instrumentalAudio.current) instrumentalAudio.current.seek(playbackPos + 5);
-            if(vocalAudio.current) vocalAudio.current.seek(playbackPos + 5);
+            seekAll(playbackPos + 5);
         } else if(ev.code == "KeyV"){
             if(props.jsz.manifest.timingHints.vocalTrackVolumeUnfocused == 0.0){
                 props.jsz.manifest.timingHints.vocalTrackVolumeUnfocused = 1.0;
@@ -215,8 +247,8 @@ export default function Player(props: PlayerProps){
     }
 
     function startPlayback(){
-        if(!instrumentalAudio.current || !vocalAudio.current){
-            alert("Something broke and not everything was loaded! Please reload the page.");
+        if(!instrumentalAudio.current || !vocalAudio.current || !backgroundPrerequistesLoaded){
+            alert("Something broke and not everything was loaded! Please reload the page or try again in a few seconds.");
             return;
         };
         setUserInteracted(true);
@@ -224,14 +256,27 @@ export default function Player(props: PlayerProps){
         vocalAudio.current.seek(0);
         instrumentalAudio.current.play();
         vocalAudio.current.play();
+        if(props.jsz.manifest.timingHints.backgroundVideoMuted){
+            backgroundVideo.current.muted = true;
+        }else{
+            backgroundVideo.current.muted = false;
+        }
+        if(props.jsz.backgroundVideoFile){
+            backgroundVideo.current.currentTime = 0;
+            backgroundVideo.current.play();
+        }
         console.log("started playback " + instrumentalAudio.current.state() + " " + vocalAudio.current.state());
     }
 
     return <div className="w-full h-full grid bg-black" onKeyDown={(ev) => handleKey(ev)} tabIndex={0}>
         {/* background layer */}
         {
+            <video ref={backgroundVideo} className="col-start-1 row-start-1" muted playsInline />
+        /* video layer */
+        }
+        {
             <div className="col-start-1 row-start-1">
-                <TextDisplay jsz={props.jsz} renderMode={props.renderMode || "auto"} pos={playbackPos} displayMode={displayMode} className="text-4xl border-black mb-24" />
+                <TextDisplay jsz={props.jsz} renderMode={props.renderMode || "auto"} pos={playbackPos} displayMode={displayMode} className="text-4xl font-medium mb-24 drop-shadow-2xl" />
             </div>
         }
         {!userInteracted && <>
@@ -239,7 +284,7 @@ export default function Player(props: PlayerProps){
                 <div className="w-full h-full absolute top-0 left-0 bg-black bg-opacity-50 flex flex-col justify-center items-center" onClick={startPlayback}>
                     <div className="w-full h-full flex flex-col justify-center items-center">
                         <div className="w-full h-full flex flex-col justify-center items-center">
-                            <CirclePlay size={48} className="w-48 h-48 text-white" />
+                            <CirclePlay size={96} className={"w-96 h-96 " + backgroundPrerequistesLoaded ? "text-white" : "text-gray-500"} />
                             {/* yes the click bb is actually farther up, funnily */}
                         </div>
                     </div>

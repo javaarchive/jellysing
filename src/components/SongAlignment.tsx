@@ -20,6 +20,8 @@ export function SongAlignment(props: SongAlignmentProps) {
 
 
     useEffect(() => {
+        if(!props.lyrics) return;
+        if(!props.lyrics["syncedLyrics"]) return;
         const lyricInput = preprocessText(props.lyrics["syncedLyrics"]);
         if(!props.lyrics) return;
         let parsedLyricLines: LyricLine[] = [];

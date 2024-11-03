@@ -44,6 +44,7 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
         jsz.addVocalsTrackFile(vocalBlob);
         jsz.updateAlignment(alignment);
         setPrepareStatus("Preparing file...");
+        window["jsz"] = jsz; // debug.
         // TODO: duration metadata?
         const blobWriter = new BlobWriter();
         const zipWriter = new ZipWriter(blobWriter);

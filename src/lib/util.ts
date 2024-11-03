@@ -40,7 +40,7 @@ export function parseSRT(srt: string): LyricLine[] {
             // secs to ms
             startTime: line.start * 1000,
             endTime: line.end * 1000,
-            text: line.text
+            text: line.text.trim() // remove trailing whitespace
         };
     });
 }
@@ -82,5 +82,5 @@ export async function download(resp: Response, callbacks: DownloadCallbacks) {
 
 export function preprocessText(text: string){
     // unspecial char things
-    return text.replaceAll("“", '"').replace("”", '"').replaceAll("‘", "'").replaceAll("’", "'").replaceAll("…", "...").replaceAll("–", "-").replaceAll("—", "--").replaceAll("―", "---").replaceAll("•", "*");
+    return text.replaceAll("“", '"').replace("”", '"').replaceAll("‘", "'").replaceAll("’", "'").replaceAll("…", "...").replaceAll("–", "-").replaceAll("—", "--").replaceAll("―", "---").replaceAll("•", "*").replaceAll("♪", "");
 }
