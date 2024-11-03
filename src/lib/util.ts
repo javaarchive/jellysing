@@ -1,6 +1,8 @@
 // lrc parsing
 
-interface LyricLine {
+import parseSRTExternal from "parse-srt";
+
+export interface LyricLine {
     startTime: number;
     endTime: number;
     text: string;
@@ -30,6 +32,17 @@ export function parseLRC(lrc: string, durationHint: number = -1): LyricLine[] {
     }
     output = output.filter(line => line.text.trim().length > 0);
     return output;
+}
+
+export function parseSRT(srt: string): LyricLine[] {
+    return parseSRTExternal(srt).map(line => {
+        return {
+            // secs to ms
+            startTime: line.start * 1000,
+            endTime: line.end * 1000,
+            text: line.text
+        };
+    });
 }
 
 interface DownloadCallbacks {
@@ -65,4 +78,9 @@ export async function download(resp: Response, callbacks: DownloadCallbacks) {
     const blob = new Blob(chunks);
     callbacks.onFinish(blob);
     return blob;
+}
+
+export function preprocessText(text: string){
+    // unspecial char things
+    return text.replaceAll("“", '"').replace("”", '"').replaceAll("‘", "'").replaceAll("’", "'").replaceAll("…", "...").replaceAll("–", "-").replaceAll("—", "--").replaceAll("―", "---").replaceAll("•", "*");
 }

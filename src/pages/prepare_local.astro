@@ -1,0 +1,17 @@
+---
+import CenteredContent from '../components/CenteredContent.astro';
+import LocalSongPrepareView from '../components/LocalSongPrepareView';
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Prepare a local file.">
+	<main>
+		<CenteredContent>
+			<h1 class="text-center text-2xl font-extralight">Prepare a local file.</h1>
+			<p>
+				This does not require a Jellyfin server, as long as you have a processing server configured. 
+			</p>
+			<LocalSongPrepareView client:only />
+		</CenteredContent>
+	</main>
+</Layout>

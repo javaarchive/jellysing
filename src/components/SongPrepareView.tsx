@@ -31,6 +31,8 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
     const [prepareStatus, setPrepareStatus] = useState("");
     const [jszBlob, setJszBlob] = useState(null);
     const [jszBlobUrl, setJszBlobUrl] = useState("");
+    const [customLyricsText, setCustomLyricsText] = useState("");
+    const [customLyricsType, setCustomLyricsType] = useState("lrc");
 
     async function prepareJsz(){
         let jsz = new Jsz();
@@ -81,8 +83,17 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
             duration: props.song.duration,
         };
         let lyricData = await (mode == "get" ? lyricsClient.get(query) : lyricsClient.search(query));
-        for(let i = 0; i < lyricData.length; i++){
-            lyricData[i]["index"] = i;
+        if(!lyricData.length && !lyricData.id){
+            lyricData = [];
+        }
+        if(lyricData.length >= 0){
+            for(let i = 0; i < lyricData.length; i++){
+                lyricData[i]["index"] = i;
+                lyricData[i]["type"] = "lrc";
+            }
+        } else {
+            lyricData["index"] = 0;
+            lyricData["type"] = "lrc";
         }
         if(mode == "get"){
             setSelectedLyrics(lyricData);
@@ -99,6 +110,16 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
             setLyrics([]);
         }
     }
+
+    function applyCustomLyrics(){
+
+        setSelectedLyrics({"syncedLyrics": customLyricsText, "type": customLyricsType, "id": "custom_" + customLyricsType});
+    }
+
+
+    // if(selectedLyrics) console.log(selectedLyrics["type"], selectedLyrics["id"], selectedLyrics["syncedLyrics"] == customLyricsText);
+    const isUsingCustom = selectedLyrics && selectedLyrics["id"] == ("custom_" + customLyricsType) && selectedLyrics["syncedLyrics"] == customLyricsText;
+    // console.log(isUsingCustom);
 
     return (
         <>
@@ -146,6 +167,25 @@ export default function SongPrepareView(props: SongPrepareViewProps) {
                         })}
                     </div>
                 </div>
+                <details>
+                    <summary className="text-xl font-bold">
+                        Optional: Use your own lyrics file
+                    </summary>
+                    <textarea className="w-full p-2 rounded-md m-2" placeholder="Paste lyrics here!" name="lyrics" value={customLyricsText} onChange={(e) => setCustomLyricsText(e.target.value)} />
+                    <select className="w-full p-2 rounded-md m-2" name="lyrics_type" value={customLyricsType} onChange={(e) => setCustomLyricsType(e.target.value)}>
+                        <option value="lrc">LRC</option>
+                        <option value="srt">SRT</option>  
+                    </select>
+                    Try <a href="https://downsub.com" target="_blank">DownSub</a> to get a SRT for YouTube videos.
+                    <button className="w-full p-2 rounded-md m-2 bg-accent text-accent-foreground" onClick={() => applyCustomLyrics()} disabled={isUsingCustom}>
+                        {isUsingCustom ? "Custom lyrics applied.": "Use custom lyrics!"}
+                    </button>
+                    <button className="w-full p-2 rounded-md m-2 bg-accent text-accent-foreground" 
+                    onClick={() => setCustomLyricsText(selectedLyrics["syncedLyrics"])}>
+                        Load current lyrics for editing
+                    </button>
+
+                </details>
                 <h2 className="text-xl font-bold">
                     Stem Seperation
                 </h2>

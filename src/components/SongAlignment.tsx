@@ -1,6 +1,6 @@
-import {useState, useEffect, useRef} from "react";
+import {useState, useEffect, useRef, useMemo} from "react";
 import { getDefaultBackendClient } from "../lib/backend_client";
-import { download, parseLRC } from "../lib/util";
+import { download, parseLRC, parseSRT, preprocessText, type LyricLine } from "../lib/util";
 
 interface SongAlignmentProps {
     inputAudio?: Blob;
@@ -20,8 +20,15 @@ export function SongAlignment(props: SongAlignmentProps) {
 
 
     useEffect(() => {
+        const lyricInput = preprocessText(props.lyrics["syncedLyrics"]);
         if(!props.lyrics) return;
-        setParsedLyrics(parseLRC(props.lyrics["syncedLyrics"]));
+        let parsedLyricLines: LyricLine[] = [];
+        if(props.lyrics["type"] == "lrc"){
+            parsedLyricLines = parseLRC(lyricInput)
+        }else if(props.lyrics["type"] == "srt"){
+            parsedLyricLines = parseSRT(lyricInput)
+        }
+        setParsedLyrics(parsedLyricLines);
     }, [props.lyrics]);
 
     async function performAlignment(){
@@ -71,7 +78,25 @@ export function SongAlignment(props: SongAlignmentProps) {
         return alignment["segments"].find(segment => segment.start <= pos && pos <= segment.end);
     }
 
-    const seg = alignment ? getSegment(props.inputPreviewTime) : null;
+    const seg = useMemo(() => alignment ? getSegment(props.inputPreviewTime) : null, [props.inputPreviewTime, alignment]);
+    const avgScore = useMemo(() => {
+        let words = 0;
+        let chars = 0;
+        let wordScoreSum = 0;
+        let charScoreSum = 0;
+        if(!alignment) return [0,0];
+        for(let segment of alignment.segments){
+            words += segment.words.length;
+            chars += segment.chars.length;
+            for(let word of segment.words){
+                wordScoreSum += word.score || 0;
+            }
+            for(let char of segment.chars){
+                charScoreSum += char.score || 0;
+            }
+        }
+        return [wordScoreSum / words, charScoreSum / chars];
+    }, [alignment]);
 
     return <>
         <p>
@@ -86,7 +111,7 @@ export function SongAlignment(props: SongAlignmentProps) {
                     Alignment Test
                 </h1>
                 <p>
-                    Press play on the above audio to check alignment. Current seconds: {props.inputPreviewTime}
+                    Press play on the above audio to check alignment. Average scores for words: {avgScore[0].toFixed(2)} and characters: {avgScore[1].toFixed(2)}. Current seconds: {props.inputPreviewTime}
                 </p>
                 {seg && <>
                     <h2 className="text-lg font-bold">
