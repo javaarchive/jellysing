@@ -271,7 +271,7 @@ export default function Player(props: PlayerProps){
     return <div className="w-full h-full grid bg-black" onKeyDown={(ev) => handleKey(ev)} tabIndex={0}>
         {/* background layer */}
         {
-            <video ref={backgroundVideo} className="col-start-1 row-start-1" muted playsInline />
+            <video ref={backgroundVideo} className="col-start-1 row-start-1 w-full h-auto" muted playsInline />
         /* video layer */
         }
         {
