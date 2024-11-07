@@ -109,3 +109,7 @@ html {
 .font-outline-4 {
     -webkit-text-stroke: 4px black;
 }
+
+.drop-shadow-my-default {
+    filter: drop-shadow(0 0 0.25rem black);
+}

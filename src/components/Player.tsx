@@ -276,7 +276,7 @@ export default function Player(props: PlayerProps){
         }
         {
             <div className="col-start-1 row-start-1">
-                <TextDisplay jsz={props.jsz} renderMode={props.renderMode || "auto"} pos={playbackPos} displayMode={displayMode} className="text-4xl font-medium mb-24 drop-shadow-2xl" />
+                <TextDisplay jsz={props.jsz} renderMode={props.renderMode || "auto"} pos={playbackPos} displayMode={displayMode} className="text-4xl font-medium mb-24 drop-shadow-my-default" />
             </div>
         }
         {!userInteracted && <>
