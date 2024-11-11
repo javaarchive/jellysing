@@ -1,5 +1,13 @@
 import { BlobReader, BlobWriter, TextReader, TextWriter, ZipReader, type ZipWriter } from "@zip.js/zip.js";
 
+const fontFileExtensions = [
+    "ttf",
+    "otf",
+    "woff",
+    "woff2",
+    "eot"
+]
+
 export interface SongMetadata {
     title: string;
     artists: string[];
@@ -23,6 +31,8 @@ export interface JszStyling {
     blurFocused: number;
     blurUnfocused: number;
     renderMode: string;
+    inactiveTextColor?: string;
+    activeTextColor?: string;
 }
 
 export interface JszManifest {
@@ -94,6 +104,9 @@ export default class Jsz {
     instrumentalFormatHint = "wav";
     vocalFormatHint = "wav";
     backgroundVideoFormatHint = "mp4";
+
+    fonts: Record<string, Blob> = {}; // family -> blob
+    fontFileTypes: Record<string, string> = {}; // family -> filetype
 
     visualCache = null;
 
@@ -237,7 +250,11 @@ export default class Jsz {
             await zip.add("background." + this.backgroundVideoFormatHint, new BlobReader(this.backgroundVideoFile));
         }
 
-        // TODO; background image and/or video support
+        // TODO; background image support
+
+        for(let [family, blob] of Object.entries(this.fonts)){
+            await zip.add(family + "." + this.fontFileTypes[family], new BlobReader(blob));
+        }
 
         await zip.close();
     }
@@ -245,27 +262,42 @@ export default class Jsz {
     async readFromZip(zip: ZipReader<any>){
         let entries = await zip.getEntries();
         for(let entry of entries){
+            const splitFilename =  entry.filename.split(".");
+            let extension = "";
+            if(splitFilename.length > 1){
+                extension = splitFilename.pop();
+            }
             if(entry.filename == "manifest.json"){
                 this.manifest = JSON.parse(await entry.getData(new TextWriter()));
             }else if(entry.filename == "alignment.json"){
                 this.updateAlignment(JSON.parse(await entry.getData(new TextWriter())));
             }else if(entry.filename == "vocals.wav" || entry.comment == "tag:vocals") {
                 this.vocalsTrackFile = await entry.getData(new BlobWriter());
-                this.vocalFormatHint = entry.filename.split(".").pop();
+                this.vocalFormatHint = extension;
             }else if(entry.filename == "instrumentals.wav" || entry.comment == "tag:instrumentals") {
                 this.instrumentalsTrackFile = await entry.getData(new BlobWriter());
-                this.instrumentalFormatHint = entry.filename.split(".").pop();
+                this.instrumentalFormatHint = extension;
             } else if(entry.filename == "background.mp4" || entry.filename == "background.webm" || entry.comment == "tag:background") { 
                 this.backgroundVideoFile = await entry.getData(new BlobWriter());
-                this.backgroundVideoFormatHint = entry.filename.split(".").pop();
+                this.backgroundVideoFormatHint = extension;
+            } else if(fontFileExtensions.includes(extension)){
+                const family = splitFilename.join(".");
+                this.fonts[family] = await entry.getData(new BlobWriter());
+                this.fontFileTypes[family] = extension;
             }
-            // TODO: background image and/or video support
+            // TODO: background image support
         }
         await zip.close();
     }
 
     getSegment(pos: number){
         return this.alignment.segments.find(segment => segment.start <= pos && pos <= segment.end);
+    }
+
+    // TODO: allow font changes mid song. prob introduce along with the next customization update
+    getFont(pos: number){
+        // for now we return the first font
+        return Object.keys(this.fonts)[0];
     }
 
     getSegmentWithPaddingComputation(pos: number){

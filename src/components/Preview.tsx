@@ -9,6 +9,7 @@ interface PreviewProps {
     renderMode?: string;
     focusVolControlBeta?: boolean;
     forceVocalsOnUnfocused?: boolean;
+    disableFonts?: boolean;
 }
 
 export default function Preview(props: PreviewProps){
@@ -28,7 +29,7 @@ export default function Preview(props: PreviewProps){
     }
 
     return <>
-        {jsz ? <Player jsz={jsz} displayMode={props.displayMode} renderMode={props.renderMode} />:<SelectJszFile onJszLoaded={onJszLoaded}/>}
+        {jsz ? <Player jsz={jsz} displayMode={props.displayMode} renderMode={props.renderMode} disableFonts={props.disableFonts} />:<SelectJszFile onJszLoaded={onJszLoaded} />}
     </>
 }
 

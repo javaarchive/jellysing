@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, type CSSProperties } from "react";
 import {Howl, Howler} from 'howler';
 import Jsz, { type JszDisplaySegment } from "../lib/jsz";
 import { CirclePlay } from "lucide-react";
@@ -93,6 +93,7 @@ interface PlayerProps {
     jsz: Jsz;
     renderMode?: string;
     displayMode?: string;
+    disableFonts?: boolean;
 }
 
 export default function Player(props: PlayerProps){
@@ -106,6 +107,7 @@ export default function Player(props: PlayerProps){
     let [displayMode, setDisplayMode] = useState(props.displayMode || "words");
     let [renderMode, setRenderMode] = useState(props.renderMode || "auto");
     let [backgroundPrerequistesLoaded, setBackgroundPrerequisitesLoaded] = useState(false);
+    let [currentFontFamily, setCurrentFontFamily] = useState((!props.disableFonts && props.jsz.getFont(0)) || "Inter Variable");
 
     useEffect(() => {
         setDisplayMode(props.displayMode || "words");
@@ -151,16 +153,28 @@ export default function Player(props: PlayerProps){
             format: ["wav"]
         });
 
+        async function loadingPart2(){
+            if(props.jsz.fonts[currentFontFamily]){
+                // load external font
+                console.log("loading font " + currentFontFamily);
+                const fontBlobURL = URL.createObjectURL(props.jsz.fonts[currentFontFamily]);
+                const fontFace = new FontFace(currentFontFamily, `url(${fontBlobURL})`);
+                await fontFace.load();
+                document.fonts.add(fontFace);
+            }
+            setBackgroundPrerequisitesLoaded(true);
+        }
+
         if(props.jsz.backgroundVideoFile){
             let backgroundVideoBlobURL = URL.createObjectURL(props.jsz.backgroundVideoFile);
             backgroundVideo.current.preload = "auto";
             backgroundVideo.current.src = backgroundVideoBlobURL;
             backgroundVideo.current.load();
             backgroundVideo.current.addEventListener("canplaythrough", () => {
-                setBackgroundPrerequisitesLoaded(true);
+                loadingPart2();
             });
         }else{
-            setBackgroundPrerequisitesLoaded(true);
+            loadingPart2();
         }
         
         function tick(){
@@ -268,7 +282,28 @@ export default function Player(props: PlayerProps){
         console.log("started playback " + instrumentalAudio.current.state() + " " + vocalAudio.current.state());
     }
 
-    return <div className="w-full h-full grid bg-black" onKeyDown={(ev) => handleKey(ev)} tabIndex={0}>
+    let extraStyles: any = useMemo(() => {
+        let output = {
+            "--web-player": "1",
+            "fontFamily": currentFontFamily,
+        };
+        if(props.jsz.manifest.styling.activeTextColor){
+            output["--partial-progressed-color"] = props.jsz.manifest.styling.activeTextColor;
+           
+        }
+        if(props.jsz.manifest.styling.inactiveTextColor){
+            output["--partial-initial-color"] = props.jsz.manifest.styling.inactiveTextColor;
+        }
+        if(props.jsz.manifest.styling.backgroundColor){
+            output["--background"] = props.jsz.manifest.styling.backgroundColor;
+            output["backgroundColor"] = props.jsz.manifest.styling.backgroundColor;
+        }else{
+            output["backgroundColor"] = "black";
+        }
+        return output;
+    }, [props.jsz, currentFontFamily]); // TODO: make time a dependency
+
+    return <div className="w-full h-full grid" onKeyDown={(ev) => handleKey(ev)} tabIndex={0} style={extraStyles}>
         {/* background layer */}
         {
             <video ref={backgroundVideo} className="col-start-1 row-start-1 w-full h-auto" muted playsInline />
